@@ -9,8 +9,7 @@ import {
 
 const Header = () => {
   const handleLoginClick = () => {
-    // Navigate to login page - placeholder for now
-    console.log("Navigate to login");
+    window.location.href = '/login';
   };
 
   const handleLanguageChange = (language: string) => {
