@@ -12,11 +12,9 @@ const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<UserRole>('Operations');
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { signIn, signUp, user } = useAuth();
+  const { signIn, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -43,9 +41,7 @@ const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      const { error } = isSignUp 
-        ? await signUp(email, password, role, fullName)
-        : await signIn(email, password, role);
+      const { error } = await signIn(email, password, role);
 
       if (error) {
         toast({
@@ -56,13 +52,9 @@ const Login: React.FC = () => {
       } else {
         toast({
           title: 'Success',
-          description: isSignUp 
-            ? 'Account created successfully! Please check your email to verify your account.'
-            : 'Signed in successfully!',
+          description: 'Signed in successfully!',
         });
-        if (!isSignUp) {
-          navigate('/dashboard');
-        }
+        navigate('/dashboard');
       }
     } catch (error) {
       toast({
@@ -88,25 +80,12 @@ const Login: React.FC = () => {
           </div>
           <CardTitle className="text-2xl font-bold text-foreground">IntelliDocs AI</CardTitle>
           <p className="text-muted-foreground">
-            {isSignUp ? 'Create your account' : 'Sign in to your account'}
+            Sign in to your account
           </p>
         </CardHeader>
 
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
-            {isSignUp && (
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
-                <Input
-                  id="fullName"
-                  type="text"
-                  placeholder="Enter your full name"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                />
-              </div>
-            )}
-
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -154,19 +133,12 @@ const Login: React.FC = () => {
               className="w-full bg-primary hover:bg-primary-hover"
               disabled={loading}
             >
-              {loading ? 'Processing...' : (isSignUp ? 'Sign Up' : 'Sign In')}
+              {loading ? 'Processing...' : 'Sign In'}
             </Button>
 
-            <button
-              type="button"
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-sm text-muted-foreground hover:text-primary transition-colors"
-            >
-              {isSignUp 
-                ? 'Already have an account? Sign in'
-                : "Don't have an account? Sign up"
-              }
-            </button>
+            <p className="text-sm text-muted-foreground text-center">
+              For company employees only
+            </p>
           </CardFooter>
         </form>
       </Card>
