@@ -87,7 +87,7 @@ const DashboardHeader: React.FC = () => {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
-                Go to Dashboard <ChevronDown className="ml-2 h-3 w-3" />
+                Go to Department <ChevronDown className="ml-2 h-3 w-3" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
