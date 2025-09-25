@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -23,20 +23,29 @@ const Dashboard: React.FC = () => {
     }
   }, [user, loading, navigate]);
 
+  // Early loading return with better performance
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-sm text-muted-foreground">Loading dashboard...</p>
         </div>
       </div>
     );
   }
 
-  if (!user || !profile) return null;
+  if (!user || !profile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <p className="text-sm text-muted-foreground">Redirecting to login...</p>
+        </div>
+      </div>
+    );
+  }
 
-  const quickStats = [
+  const quickStats = useMemo(() => [
     {
       title: 'Total Documents Processed',
       value: '1,247',
@@ -65,9 +74,9 @@ const Dashboard: React.FC = () => {
       trend: 'New',
       description: 'New alerts'
     }
-  ];
+  ], []);
 
-  const recentDocuments = [
+  const recentDocuments = useMemo(() => [
     {
       title: 'Engineering Report Q4 2024',
       category: 'Engineering',
@@ -96,21 +105,21 @@ const Dashboard: React.FC = () => {
       date: '2024-01-12',
       aiSummary: 'Equipment maintenance timeline and resource allocation plan.'
     }
-  ];
+  ], []);
 
-  const complianceData = [
+  const complianceData = useMemo(() => [
     { status: 'OK', count: 892, color: 'bg-green-500' },
     { status: 'Pending', count: 156, color: 'bg-yellow-500' },
     { status: 'Overdue', count: 23, color: 'bg-red-500' }
-  ];
+  ], []);
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files && files.length > 0) {
       // Handle file upload logic here
       console.log('Files uploaded:', files);
     }
-  };
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
