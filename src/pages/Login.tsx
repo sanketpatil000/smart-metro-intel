@@ -80,9 +80,11 @@ const Login: React.FC = () => {
       <Card className="w-full max-w-md shadow-hero">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 bg-gradient-primary rounded-lg flex items-center justify-center">
-              <span className="text-2xl font-bold text-white">I</span>
-            </div>
+            <img 
+              src="https://images.seeklogo.com/logo-png/45/1/kochi-metro-logo-png_seeklogo-459977.png"
+              alt="Kochi Metro Logo"
+              className="h-16 w-16"
+            />
           </div>
           <CardTitle className="text-2xl font-bold text-foreground">IntelliDocs AI</CardTitle>
           <p className="text-muted-foreground">
