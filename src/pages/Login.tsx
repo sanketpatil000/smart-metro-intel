@@ -14,7 +14,7 @@ const Login: React.FC = () => {
   const [role, setRole] = useState<UserRole>('Operations');
   const [loading, setLoading] = useState(false);
 
-  const { signIn, user, loading: authLoading } = useAuth();
+  const { signIn, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -22,27 +22,10 @@ const Login: React.FC = () => {
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (!authLoading && !user) {
-      // User is not logged in, stay on login page
-      return;
-    }
-    if (!authLoading && user) {
-      // User is already logged in, redirect to dashboard
+    if (user) {
       navigate('/dashboard');
     }
-  }, [user, authLoading, navigate]);
-
-  // Show loading while checking auth status
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-metro-light to-background">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-2 text-sm text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

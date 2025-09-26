@@ -6,13 +6,10 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { useNavigate } from "react-router-dom";
 
 const Header = () => {
-  const navigate = useNavigate();
-
   const handleLoginClick = () => {
-    navigate('/login');
+    window.location.href = '/login';
   };
 
   const handleLanguageChange = (language: string) => {
