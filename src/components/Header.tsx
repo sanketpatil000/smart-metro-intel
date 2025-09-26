@@ -1,4 +1,5 @@
 import { Globe, LogIn } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
   DropdownMenu, 
@@ -8,8 +9,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const Header = () => {
+  const navigate = useNavigate();
+
   const handleLoginClick = () => {
-    window.location.href = '/login';
+    navigate('/login');
   };
 
   const handleLanguageChange = (language: string) => {
@@ -18,11 +21,11 @@ const Header = () => {
   };
 
   const menuItems = [
-    "Dashboard",
-    "Document Feed", 
-    "Search Hub",
-    "Compliance Tracker",
-    "Admin"
+    { name: "Dashboard", path: "/main-dashboard" },
+    { name: "Document Feed", path: "/document-feed" }, 
+    { name: "Search Hub", path: "/search-hub" },
+    { name: "Compliance Tracker", path: "/compliance-tracker" },
+    { name: "Admin", path: "/admin" }
   ];
 
   return (
@@ -44,11 +47,11 @@ const Header = () => {
         <nav className="hidden md:flex items-center space-x-6">
           {menuItems.map((item) => (
             <button
-              key={item}
-              onClick={handleLoginClick}
+              key={item.name}
+              onClick={() => navigate(item.path)}
               className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
             >
-              {item}
+              {item.name}
             </button>
           ))}
         </nav>
