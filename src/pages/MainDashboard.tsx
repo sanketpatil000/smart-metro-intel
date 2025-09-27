@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Upload, Search, FileText, BarChart3, PieChart, Filter, CheckCircle, AlertCircle } from 'lucide-react';
+import { Upload, Search, FileText, BarChart3, PieChart, Filter, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import DashboardHeader from '@/components/DashboardHeader';
@@ -18,6 +19,7 @@ const MainDashboard = () => {
   const [uploading, setUploading] = useState(false);
   const [documents, setDocuments] = useState<any[]>([]);
   const [processing, setProcessing] = useState<string[]>([]);
+  const [uploadProgress, setUploadProgress] = useState<{[key: string]: number}>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -101,6 +103,7 @@ const MainDashboard = () => {
 
       const documentId = documentData.id;
       setProcessing(prev => [...prev, documentId]);
+      setUploadProgress(prev => ({ ...prev, [documentId]: 10 }));
 
       // Upload file to storage
       const filePath = `${user.id}/${documentId}-${file.name}`;
@@ -110,51 +113,92 @@ const MainDashboard = () => {
 
       if (uploadError) throw uploadError;
 
+      setUploadProgress(prev => ({ ...prev, [documentId]: 30 }));
+
       // Update document with file path
       await supabase
         .from('documents')
         .update({ file_path: filePath, status: 'processing' })
         .eq('id', documentId);
 
+      setUploadProgress(prev => ({ ...prev, [documentId]: 50 }));
+
       // Convert file to base64 for processing
       const reader = new FileReader();
       reader.onload = async () => {
-        const base64Data = reader.result?.toString().split(',')[1] || '';
-        
-        // Send to edge function for processing
-        const { data: processResult, error: processError } = await supabase.functions
-          .invoke('process-document', {
-            body: {
-              documentId,
-              fileData: base64Data,
-              filename: file.name,
-              mimeType: file.type
-            }
-          });
+        try {
+          const base64Data = reader.result?.toString().split(',')[1] || '';
+          
+          setUploadProgress(prev => ({ ...prev, [documentId]: 70 }));
+          
+          // Send to edge function for processing
+          console.log('Sending to edge function for processing...');
+          const { data: processResult, error: processError } = await supabase.functions
+            .invoke('process-document', {
+              body: {
+                documentId,
+                fileData: base64Data,
+                filename: file.name,
+                mimeType: file.type
+              }
+            });
 
-        if (processError) {
-          console.error('Processing error:', processError);
-          await supabase
-            .from('documents')
-            .update({ status: 'failed', processing_error: processError.message })
-            .eq('id', documentId);
+          console.log('Process result:', processResult, 'Error:', processError);
+
+          if (processError) {
+            console.error('Processing error:', processError);
+            await supabase
+              .from('documents')
+              .update({ status: 'failed', processing_error: processError.message })
+              .eq('id', documentId);
+            
+            toast({
+              title: "Processing Failed",
+              description: "Document upload failed. Please try again.",
+              variant: "destructive",
+            });
+            setUploadProgress(prev => {
+              const newProgress = { ...prev };
+              delete newProgress[documentId];
+              return newProgress;
+            });
+          } else {
+            setUploadProgress(prev => ({ ...prev, [documentId]: 100 }));
+            
+            toast({
+              title: "Document Processed",
+              description: `Successfully processed and categorized as ${processResult.category}`,
+            });
+            
+            // Refresh documents list
+            loadDocuments();
+            
+            // Remove from progress after a brief delay
+            setTimeout(() => {
+              setUploadProgress(prev => {
+                const newProgress = { ...prev };
+                delete newProgress[documentId];
+                return newProgress;
+              });
+            }, 2000);
+          }
+
+          setProcessing(prev => prev.filter(id => id !== documentId));
+        } catch (error) {
+          console.error('Processing error:', error);
+          setProcessing(prev => prev.filter(id => id !== documentId));
+          setUploadProgress(prev => {
+            const newProgress = { ...prev };
+            delete newProgress[documentId];
+            return newProgress;
+          });
           
           toast({
             title: "Processing Failed",
-            description: "Document upload failed. Please try again.",
+            description: "Document processing failed. Please try again.",
             variant: "destructive",
           });
-        } else {
-          toast({
-            title: "Document Processed",
-            description: `Successfully processed and categorized as ${processResult.category}`,
-          });
-          
-          // Refresh documents list
-          loadDocuments();
         }
-
-        setProcessing(prev => prev.filter(id => id !== documentId));
       };
 
       reader.readAsDataURL(file);
@@ -199,12 +243,23 @@ const MainDashboard = () => {
     { title: 'Notifications', value: '5 New', trend: 'Alerts' }
   ];
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: string, docId?: string) => {
+    const isProcessing = docId && processing.includes(docId);
+    const progress = docId ? uploadProgress[docId] : undefined;
+    
     switch (status) {
       case 'completed':
         return <CheckCircle className="h-4 w-4 text-green-600" />;
       case 'failed':
         return <AlertCircle className="h-4 w-4 text-red-600" />;
+      case 'processing':
+      case 'uploading':
+        return (
+          <div className="flex items-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+            {progress && <span className="text-xs text-muted-foreground">{progress}%</span>}
+          </div>
+        );
       default:
         return <div className="h-4 w-4 rounded-full bg-yellow-400 animate-pulse" />;
     }
@@ -269,8 +324,26 @@ const MainDashboard = () => {
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
                 >
-                  {uploading ? 'Uploading...' : 'Choose Files'}
+                  {uploading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    'Choose Files'
+                  )}
                 </Button>
+                
+                {/* Progress indicators for active uploads */}
+                {Object.entries(uploadProgress).map(([docId, progress]) => (
+                  <div key={docId} className="mt-4">
+                    <div className="flex justify-between text-sm mb-1">
+                      <span>Processing document...</span>
+                      <span>{progress}%</span>
+                    </div>
+                    <Progress value={progress} className="w-full" />
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
@@ -363,7 +436,7 @@ const MainDashboard = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          {getStatusIcon(doc.status)}
+                          {getStatusIcon(doc.status, doc.id)}
                           <Badge variant={
                             doc.status === 'completed' ? 'default' :
                             doc.status === 'failed' ? 'destructive' : 'secondary'
