@@ -258,15 +258,16 @@ const MainDashboard = () => {
                   type="file"
                   className="hidden"
                   accept=".pdf,.doc,.docx,.jpg,.png,.txt"
-                  id="file-upload"
                   ref={fileInputRef}
                   onChange={handleFileSelect}
                 />
-                <label htmlFor="file-upload">
-                  <Button variant="outline" className="cursor-pointer" disabled={uploading}>
-                    {uploading ? 'Uploading...' : 'Choose Files'}
-                  </Button>
-                </label>
+                <Button 
+                  variant="outline" 
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                >
+                  {uploading ? 'Uploading...' : 'Choose Files'}
+                </Button>
               </div>
             </CardContent>
           </Card>
