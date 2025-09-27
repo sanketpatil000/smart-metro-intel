@@ -224,11 +224,14 @@ const MainDashboard = () => {
     return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
   };
 
-  const aiSummaries = [
-    { title: 'Engineering Safety Protocol', summary: 'Updated safety protocols for metro operations...', category: 'Engineering' },
-    { title: 'HR Benefits Review', summary: 'Annual benefits review and policy updates...', category: 'HR' },
-    { title: 'Legal Compliance Check', summary: 'Quarterly compliance verification completed...', category: 'Legal' }
-  ];
+  const aiSummaries = documents
+    .filter(doc => doc.status === 'completed' && doc.ai_summary)
+    .slice(0, 3)
+    .map(doc => ({
+      title: doc.filename,
+      summary: doc.ai_summary,
+      category: doc.category
+    }));
 
   return (
     <div className="min-h-screen bg-background">
@@ -395,15 +398,19 @@ const MainDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {aiSummaries.map((summary, index) => (
-                  <div key={index} className="p-4 border rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium">{summary.title}</h4>
-                      <Badge variant="outline">{summary.category}</Badge>
+                {aiSummaries.length > 0 ? (
+                  aiSummaries.map((summary, index) => (
+                    <div key={index} className="p-4 border rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-medium">{summary.title}</h4>
+                        <Badge variant="outline">{summary.category}</Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">{summary.summary}</p>
                     </div>
-                    <p className="text-sm text-muted-foreground">{summary.summary}</p>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p className="text-center text-muted-foreground py-8">No AI summaries available yet. Upload and process documents to see summaries here.</p>
+                )}
               </div>
             </CardContent>
           </Card>
