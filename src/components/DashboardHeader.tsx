@@ -24,11 +24,13 @@ const DashboardHeader: React.FC = () => {
       <div className="container flex h-16 items-center justify-between">
         {/* Logo and Navigation */}
         <div className="flex items-center space-x-8">
-          <Link to="/dashboard" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-primary rounded-md flex items-center justify-center">
-              <span className="text-sm font-bold text-white">I</span>
-            </div>
-            <span className="text-lg font-semibold text-foreground">IntelliDocs AI</span>
+          <Link to="/dashboard" className="flex items-center space-x-3">
+            <img 
+              src="https://images.seeklogo.com/logo-png/45/1/kochi-metro-logo-png_seeklogo-459977.png"
+              alt="Kochi Metro Logo"
+              className="h-8 w-8"
+            />
+            <span className="text-xl font-bold text-foreground">IntelliDocs AI</span>
           </Link>
 
           <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
